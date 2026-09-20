@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #eef1f6;
+  --color-panel: #ffffff;
+  --color-ink: #141b2d;
+  --color-mute: #5b657a;
+  --color-line: #d7dce6;
+  --color-accent: #2f5bff;
+  --color-accent-dark: #2247d6;
+  --color-win: #178a4f;
+  --color-lose: #c93a52;
+  --color-hold: #b7791f;
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink antialiased;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-lg border border-line bg-panel p-4;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md border border-line bg-panel px-3 py-1.5 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-white hover:bg-accent-dark;
+  }
+  .btn-danger {
+    @apply text-lose;
+  }
+  .input {
+    @apply w-full rounded-md border border-line bg-white px-3 py-2 text-sm;
+  }
+  .label {
+    @apply mb-1 block text-sm text-mute;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
