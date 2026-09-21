@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,6 +16,7 @@ export async function login(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email: toEmail(username), password });
   if (error) redirectWithError("/login", "ユーザー名かパスワードが違います");
+  (await cookies()).delete("rules_ok");
   redirect("/");
 }
 
@@ -49,5 +51,6 @@ export async function register(formData: FormData) {
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email: toEmail(username), password });
   if (signInError) redirectWithError(back, "登録できました。ログインしてください");
+  (await cookies()).delete("rules_ok");
   redirect("/");
 }

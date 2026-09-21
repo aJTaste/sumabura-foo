@@ -2,18 +2,30 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import MatchCard from "@/components/MatchCard";
+import ErrorNote from "@/components/ErrorNote";
+import CharacterPicker from "@/components/CharacterPicker";
 import { MATCH_SELECT, type MatchRow } from "@/lib/types";
+import { CHARACTERS } from "@/lib/data/characters";
+import { STAGES, MAX_BANNED_STAGES, MAX_ALT_CHARACTERS } from "@/lib/data/stages";
+import { saveProfile, chooseFromProfile } from "../actions";
 
-export default async function UserPage({ params }: { params: Promise<{ username: string }> }) {
+export default async function UserPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ username: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
+}) {
   const { username } = await params;
+  const { error, saved } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const meId = user!.id;
 
   const { data: p } = await supabase.from("profiles").select("*").eq("username", username).maybeSingle();
   if (!p) notFound();
+  const isMe = p.id === user!.id;
 
   const { data } = await supabase
     .from("matches")
@@ -21,29 +33,21 @@ export default async function UserPage({ params }: { params: Promise<{ username:
     .eq("status", "confirmed")
     .or(`player_a.eq.${p.id},player_b.eq.${p.id}`)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(10);
   const matches = (data ?? []) as unknown as MatchRow[];
-
-  // 実際に使ったキャラの集計（ゲーム単位）
-  const usage = new Map<string, { games: number; wins: number }>();
-  for (const m of matches) {
-    for (const g of m.match_games) {
-      const ch = m.player_a === p.id ? g.a_character : g.b_character;
-      if (!ch) continue;
-      const u = usage.get(ch) ?? { games: 0, wins: 0 };
-      u.games += 1;
-      if (g.winner_id === p.id) u.wins += 1;
-      usage.set(ch, u);
-    }
-  }
-  const topChars = [...usage.entries()].sort((a, b) => b[1].games - a[1].games).slice(0, 5);
 
   const total = p.wins + p.losses;
   const winRate = total ? Math.round((p.wins / total) * 100) : null;
-  const isMe = p.id === meId;
 
   return (
     <div className="space-y-6">
+      <ErrorNote message={error} />
+      {saved && (
+        <p role="status" className="rounded-md border border-win/40 bg-win/10 px-3 py-2 text-sm text-win">
+          保存しました
+        </p>
+      )}
+
       <section className="panel">
         <div className="flex flex-wrap items-baseline gap-x-3">
           <h1 className="text-2xl font-bold">{p.display_name}</h1>
@@ -68,52 +72,87 @@ export default async function UserPage({ params }: { params: Promise<{ username:
             <dd className="num text-3xl font-bold">{winRate == null ? "-" : `${winRate}%`}</dd>
           </div>
         </dl>
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {isMe ? (
-            <Link href="/settings" className="btn">プロフィールを編集</Link>
+            <Link href="/rules" className="btn">ルールを見る</Link>
           ) : (
-            <Link href={`/matches/new?opponent=${p.id}`} className="btn btn-primary">この人との結果を報告</Link>
+            <form action={chooseFromProfile}>
+              <input type="hidden" name="target" value={p.id} />
+              <button className="btn btn-primary">この人と対戦する</button>
+            </form>
           )}
         </div>
       </section>
 
-      <section className="panel space-y-3">
-        <div>
-          <h2 className="text-sm text-mute">自己紹介</h2>
-          <p className="mt-1 whitespace-pre-wrap">{p.bio || "まだ書かれていません"}</p>
-        </div>
-        <div>
-          <h2 className="text-sm text-mute">メインキャラ</h2>
-          <p className="mt-1">{p.main_characters.join("、") || "未設定"}</p>
-        </div>
-        <div>
-          <h2 className="text-sm text-mute">拒否ステージ</h2>
-          <p className="mt-1">{p.banned_stages.join("、") || "なし"}</p>
-        </div>
-      </section>
+      {isMe ? (
+        <form action={saveProfile} className="panel space-y-5">
+          <h2 className="text-lg font-bold">プロフィールを編集</h2>
 
-      <section className="panel">
-        <h2 className="mb-2 font-bold">よく使ったキャラ（確定した試合から集計）</h2>
-        {topChars.length === 0 ? (
-          <p className="text-sm text-mute">キャラ付きの確定試合がまだありません。</p>
-        ) : (
-          <ul className="space-y-1 text-sm">
-            {topChars.map(([name, u]) => (
-              <li key={name} className="flex gap-3">
-                <span className="w-40 font-medium">{name}</span>
-                <span className="num text-mute">{u.games}戦 {Math.round((u.wins / u.games) * 100)}%勝ち</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          <div>
+            <label className="label" htmlFor="displayName">表示名</label>
+            <input id="displayName" name="displayName" className="input" maxLength={20} defaultValue={p.display_name} required />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="bio">自己紹介（500文字まで）</label>
+            <textarea id="bio" name="bio" className="input" rows={4} maxLength={500} defaultValue={p.bio} />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="first">1戦目に使用するキャラ（1体）</label>
+            <select id="first" name="first" className="input" defaultValue={p.first_character ?? ""}>
+              <option value="">未選択</option>
+              {CHARACTERS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <span className="label">変更する場合のキャラ（{MAX_ALT_CHARACTERS}体まで）</span>
+            <CharacterPicker name="alt" options={CHARACTERS} initial={p.alt_characters} max={MAX_ALT_CHARACTERS} />
+          </div>
+
+          <fieldset>
+            <legend className="label">拒否ステージ（{MAX_BANNED_STAGES}つまで。相手はこのステージを選べません）</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {STAGES.map((s) => (
+                <label key={s} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="banned" value={s} defaultChecked={p.banned_stages.includes(s)} />
+                  {s}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="flex items-center gap-3">
+            <button className="btn btn-primary">保存する</button>
+            <span className="text-sm text-mute">変更は次の対戦から反映されます。</span>
+          </div>
+        </form>
+      ) : (
+        <section className="panel space-y-3">
+          <div>
+            <h2 className="text-sm text-mute">自己紹介</h2>
+            <p className="mt-1 whitespace-pre-wrap">{p.bio || "まだ書かれていません"}</p>
+          </div>
+          <div>
+            <h2 className="text-sm text-mute">1戦目に使用するキャラ</h2>
+            <p className="mt-1">{p.first_character ?? "未設定"}</p>
+          </div>
+          <div>
+            <h2 className="text-sm text-mute">変更する場合のキャラ</h2>
+            <p className="mt-1">{p.alt_characters.join("、") || "未設定"}</p>
+          </div>
+          <div>
+            <h2 className="text-sm text-mute">拒否ステージ</h2>
+            <p className="mt-1">{p.banned_stages.join("、") || "なし"}</p>
+          </div>
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="font-bold">最近の試合</h2>
         {matches.length === 0 && <p className="text-sm text-mute">確定した試合がありません。</p>}
-        {matches.slice(0, 10).map((m) => (
-          <MatchCard key={m.id} m={m} meId={meId} back={`/users/${p.username}`} />
-        ))}
+        {matches.map((m) => <MatchCard key={m.id} m={m} />)}
       </section>
     </div>
   );

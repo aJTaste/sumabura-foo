@@ -25,7 +25,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const onLogin = request.nextUrl.pathname.startsWith("/login");
+  const path = request.nextUrl.pathname;
+  const onLogin = path.startsWith("/login");
+  const onRules = path.startsWith("/rules");
+
   if (!user && !onLogin) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -36,6 +39,15 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  // ログインするたびにルールを表示する（確認するまで他のページには進めない）
+  const isServerAction = request.headers.has("next-action");
+  if (user && !onRules && !isServerAction && !request.cookies.has("rules_ok")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/rules";
+    url.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`;
     return NextResponse.redirect(url);
   }
   return response;

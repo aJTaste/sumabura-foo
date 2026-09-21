@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/actions";
+import { challengeCutoff } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "スマブラ レートランキング",
@@ -25,18 +26,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       .eq("id", user.id)
       .single();
     me = data;
+
+    // あなたを選んでいる人の数（対戦の合図）
     const { count } = await supabase
-      .from("matches")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending")
-      .eq("player_b", user.id);
+      .from("challenges")
+      .select("from_user", { count: "exact", head: true })
+      .eq("to_user", user.id)
+      .gt("created_at", challengeCutoff());
     waiting = count ?? 0;
+
+    // 管理者: 裁定が必要な対戦・大会の試合の数
     if (me?.is_admin) {
-      const { count: d } = await supabase
-        .from("matches")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "disputed");
-      disputed = d ?? 0;
+      const [{ count: d1 }, { count: d2 }] = await Promise.all([
+        supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "disputed"),
+        supabase.from("tournament_matches").select("id", { count: "exact", head: true }).eq("status", "disputed"),
+      ]);
+      disputed = (d1 ?? 0) + (d2 ?? 0);
     }
   }
 
@@ -55,13 +60,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <>
                 <nav className="flex flex-wrap items-center">
                   <Link href="/" className={link}>ランキング</Link>
-                  <Link href="/matches/new" className={link}>結果を報告</Link>
-                  <Link href="/matches" className={link}>
-                    試合
+                  <Link href="/battle" className={link}>
+                    対戦
                     {waiting > 0 && <span className={badge}>{waiting}</span>}
                   </Link>
+                  <Link href="/tournaments" className={link}>大会</Link>
+                  <Link href="/news" className={link}>お知らせ</Link>
                   <Link href={`/users/${me.username}`} className={link}>プロフィール</Link>
-                  <Link href="/settings" className={link}>設定</Link>
+                  <Link href="/rules" className={link}>ルール</Link>
                   {me.is_admin && (
                     <Link href="/admin" className={link}>
                       管理
