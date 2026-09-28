@@ -9,26 +9,28 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { error } = await searchParams;
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user!.id).single();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session!.user;
+  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
   if (!me?.is_admin) redirect("/");
 
-  const { data } = await supabase
-    .from("matches")
-    .select(MATCH_SELECT)
-    .in("status", ["pending", "disputed"])
-    .order("created_at", { ascending: true });
+  // 大会の保留（勝者の指定は各大会のページで行う）
+  const [{ data }, { data: tRows }] = await Promise.all([
+    supabase
+      .from("matches")
+      .select(MATCH_SELECT)
+      .in("status", ["pending", "disputed"])
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("tournament_matches")
+      .select(
+        "id, tournament_id, round, a_report, b_report, a:profiles!tournament_matches_player_a_fkey(display_name), b:profiles!tournament_matches_player_b_fkey(display_name), t:tournaments(title)"
+      )
+      .eq("status", "disputed"),
+  ]);
   const matches = (data ?? []) as unknown as MatchRow[];
   const disputed = matches.filter((m) => m.status === "disputed");
-
-  // 大会の保留（勝者の指定は各大会のページで行う）
-  const { data: tRows } = await supabase
-    .from("tournament_matches")
-    .select(
-      "id, tournament_id, round, a_report, b_report, a:profiles!tournament_matches_player_a_fkey(display_name), b:profiles!tournament_matches_player_b_fkey(display_name), t:tournaments(title)"
-    )
-    .eq("status", "disputed");
   const tDisputed = (tRows ?? []) as unknown as {
     id: string;
     tournament_id: string;

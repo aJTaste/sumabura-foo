@@ -13,26 +13,28 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   let me: { username: string; display_name: string; is_admin: boolean } | null = null;
   let waiting = 0;
   let disputed = 0;
   if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("username, display_name, is_admin")
-      .eq("id", user.id)
-      .single();
+    const [{ data }, { count }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, display_name, is_admin")
+        .eq("id", user.id)
+        .single(),
+      // あなたを選んでいる人の数（対戦の合図）
+      supabase
+        .from("challenges")
+        .select("from_user", { count: "exact", head: true })
+        .eq("to_user", user.id)
+        .gt("created_at", challengeCutoff()),
+    ]);
     me = data;
-
-    // あなたを選んでいる人の数（対戦の合図）
-    const { count } = await supabase
-      .from("challenges")
-      .select("from_user", { count: "exact", head: true })
-      .eq("to_user", user.id)
-      .gt("created_at", challengeCutoff());
     waiting = count ?? 0;
 
     // 管理者: 裁定が必要な対戦・大会の試合の数

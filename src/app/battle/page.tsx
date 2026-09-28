@@ -10,9 +10,9 @@ export default async function BattlePage({ searchParams }: { searchParams: Promi
   const { error } = await searchParams;
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const meId = user!.id;
+    data: { session },
+  } = await supabase.auth.getSession();
+  const meId = session!.user.id;
 
   // 進行中の対戦があれば、その画面を出す
   const { data: active } = await supabase

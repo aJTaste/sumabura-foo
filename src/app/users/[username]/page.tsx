@@ -20,12 +20,12 @@ export default async function UserPage({
   const { error, saved } = await searchParams;
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const { data: p } = await supabase.from("profiles").select("*").eq("username", username).maybeSingle();
   if (!p) notFound();
-  const isMe = p.id === user!.id;
+  const isMe = p.id === session!.user.id;
 
   const { data } = await supabase
     .from("matches")

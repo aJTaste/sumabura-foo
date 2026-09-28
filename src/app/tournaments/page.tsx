@@ -8,21 +8,22 @@ export default async function TournamentsPage({ searchParams }: { searchParams: 
   const { error } = await searchParams;
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user!.id).single();
-  const isAdmin = !!me?.is_admin;
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session!.user;
 
-  const [{ data }, { data: entryRows }] = await Promise.all([
+  const [{ data: me }, { data }, { data: entryRows }] = await Promise.all([
+    supabase.from("profiles").select("is_admin").eq("id", user.id).single(),
     supabase.from("tournaments").select("*").order("created_at", { ascending: false }).limit(50),
     supabase.from("tournament_entries").select("tournament_id, user_id"),
   ]);
+  const isAdmin = !!me?.is_admin;
   const tournaments = (data ?? []) as Tournament[];
   const counts = new Map<string, number>();
   const mine = new Set<string>();
   for (const e of entryRows ?? []) {
     counts.set(e.tournament_id, (counts.get(e.tournament_id) ?? 0) + 1);
-    if (e.user_id === user!.id) mine.add(e.tournament_id);
+    if (e.user_id === user.id) mine.add(e.tournament_id);
   }
 
   return (

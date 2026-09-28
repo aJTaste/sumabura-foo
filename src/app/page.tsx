@@ -5,8 +5,9 @@ import { TOURNAMENT_STATUS, fmtDateTime, type Tournament } from "@/lib/types";
 export default async function RankingPage() {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const [{ data }, { data: news }, { data: cups }] = await Promise.all([
     supabase

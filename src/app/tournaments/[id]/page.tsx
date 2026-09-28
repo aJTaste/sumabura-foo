@@ -38,15 +38,12 @@ export default async function TournamentPage({
   const { error } = await searchParams;
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const meId = user!.id;
+    data: { session },
+  } = await supabase.auth.getSession();
+  const meId = session!.user.id;
 
-  const { data: t } = await supabase.from("tournaments").select("*").eq("id", id).maybeSingle();
-  if (!t) notFound();
-  const tournament = t as Tournament;
-
-  const [{ data: me }, { data: entryRows }, { data: matchRows }] = await Promise.all([
+  const [{ data: t }, { data: me }, { data: entryRows }, { data: matchRows }] = await Promise.all([
+    supabase.from("tournaments").select("*").eq("id", id).maybeSingle(),
     supabase.from("profiles").select("is_admin").eq("id", meId).single(),
     supabase
       .from("tournament_entries")
@@ -55,6 +52,8 @@ export default async function TournamentPage({
       .order("created_at"),
     supabase.from("tournament_matches").select(TMATCH_SELECT).eq("tournament_id", id).order("round").order("slot"),
   ]);
+  if (!t) notFound();
+  const tournament = t as Tournament;
   const isAdmin = !!me?.is_admin;
   const entries = (entryRows ?? []) as unknown as EntryRow[];
   const matches = (matchRows ?? []) as unknown as TMatch[];

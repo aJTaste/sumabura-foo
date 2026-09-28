@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { redirectWithError } from "@/lib/redirect";
+import { challengeCutoff } from "@/lib/types";
 
 const BACK = "/battle";
 
@@ -44,4 +45,34 @@ export async function setCancel(formData: FormData) {
     p_on: formData.get("on") === "1",
   });
   return finish(error);
+}
+
+// 対戦画面のポーリング用: 状態が変わったかどうかだけを軽量に判定する
+export async function getBattleSignal(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "logout";
+  const meId = user.id;
+
+  const { data: active } = await supabase
+    .from("matches")
+    .select("id, status, a_report, b_report")
+    .in("status", ["pending", "disputed"])
+    .or(`player_a.eq.${meId},player_b.eq.${meId}`)
+    .limit(1);
+  const m = (active ?? [])[0];
+  if (m) return `match:${m.id}:${m.status}:${m.a_report}:${m.b_report}`;
+
+  const [{ data: challenges }, { data: busyRows }] = await Promise.all([
+    supabase.from("challenges").select("from_user, to_user").gt("created_at", challengeCutoff()),
+    supabase.from("matches").select("player_a, player_b").in("status", ["pending", "disputed"]),
+  ]);
+  const relevant = (challenges ?? [])
+    .filter((c) => c.from_user === meId || c.to_user === meId)
+    .map((c) => `${c.from_user}>${c.to_user}`)
+    .sort();
+  const busy = (busyRows ?? []).flatMap((r) => [r.player_a as string, r.player_b as string]).sort();
+  return `idle:${relevant.join(",")}:${busy.join(",")}`;
 }

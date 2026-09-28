@@ -7,16 +7,15 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
   const { error } = await searchParams;
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user!.id).single();
-  const isAdmin = !!me?.is_admin;
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session!.user;
 
-  const { data } = await supabase
-    .from("announcements")
-    .select("id, title, body, created_at")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const [{ data: me }, { data }] = await Promise.all([
+    supabase.from("profiles").select("is_admin").eq("id", user.id).single(),
+    supabase.from("announcements").select("id, title, body, created_at").order("created_at", { ascending: false }).limit(50),
+  ]);
+  const isAdmin = !!me?.is_admin;
   const items = data ?? [];
 
   return (
