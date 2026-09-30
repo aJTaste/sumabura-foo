@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import type { TMatch } from "@/lib/types";
 import { reportText, roundLabel } from "@/lib/types";
@@ -53,7 +54,7 @@ function BracketMatch({ m, tid, isAdmin }: { m: TMatch; tid: string; isAdmin: bo
               <input type="hidden" name="tid" value={tid} />
               <input type="hidden" name="matchId" value={m.id} />
               <input type="hidden" name="winner" value={pid ?? ""} />
-              <button className="btn w-full text-xs">{name}の勝ちにする</button>
+              <SubmitButton className="btn w-full text-xs">{name}の勝ちにする</SubmitButton>
             </form>
           ))}
         </div>

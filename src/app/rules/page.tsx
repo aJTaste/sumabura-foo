@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { RULES_TITLE, RULES_LEAD, RULES_SECTIONS } from "@/lib/rules";
@@ -28,7 +29,7 @@ export default async function RulesPage({ searchParams }: { searchParams: Promis
       ) : (
         <form action={acceptRules}>
           <input type="hidden" name="next" value={next ?? "/"} />
-          <button className="btn btn-primary px-5 py-2.5 text-base">ルールを確認した</button>
+          <SubmitButton className="btn btn-primary px-5 py-2.5 text-base">ルールを確認した</SubmitButton>
         </form>
       )}
     </div>

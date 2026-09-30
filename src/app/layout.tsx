@@ -1,6 +1,8 @@
 import "./globals.css";
 import Link from "next/link";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import NavLinks, { type NavItem } from "@/components/NavLinks";
+import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/actions";
 import { challengeCutoff } from "@/lib/types";
@@ -9,6 +11,8 @@ export const metadata: Metadata = {
   title: "スマブラ レートランキング",
   description: "身内向けスマブラSPレーティング",
 };
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -47,44 +51,46 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     }
   }
 
-  const link = "rounded-md px-2.5 py-1.5 text-sm hover:bg-white";
-  const badge = "ml-1 rounded-full bg-lose px-1.5 text-xs text-white";
+  const items: NavItem[] = me
+    ? [
+        { href: "/", label: "ランキング", icon: "🏆" },
+        { href: "/battle", label: "対戦", icon: "⚔️", badge: waiting },
+        { href: "/tournaments", label: "大会", icon: "🏅" },
+        { href: "/news", label: "お知らせ", icon: "📢" },
+        { href: `/users/${me.username}`, label: "プロフィール", icon: "👤" },
+      ]
+    : [];
 
   return (
     <html lang="ja">
       <body>
-        <header className="border-b border-line bg-panel">
-          <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2">
-            <Link href="/" className="mr-3 text-lg font-bold">
-              スマブラ レート
+        <header className="sticky top-0 z-20 border-b border-line bg-panel/85 backdrop-blur">
+          <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-2.5">
+            <Link href="/" className="flex items-center gap-2 font-bold">
+              <span className="grid size-8 place-items-center rounded-lg bg-accent text-sm font-black text-white">S</span>
+              <span className="text-base">スマブラ レート</span>
             </Link>
             {me && (
               <>
-                <nav className="flex flex-wrap items-center">
-                  <Link href="/" className={link}>ランキング</Link>
-                  <Link href="/battle" className={link}>
-                    対戦
-                    {waiting > 0 && <span className={badge}>{waiting}</span>}
-                  </Link>
-                  <Link href="/tournaments" className={link}>大会</Link>
-                  <Link href="/news" className={link}>お知らせ</Link>
-                  <Link href={`/users/${me.username}`} className={link}>プロフィール</Link>
-                  <Link href="/rules" className={link}>ルール</Link>
+                <NavLinks items={items} variant="top" />
+                <div className="ml-auto flex items-center gap-1.5">
                   {me.is_admin && (
-                    <Link href="/admin" className={link}>
+                    <Link href="/admin" className="btn min-h-9 px-2.5">
                       管理
-                      {disputed > 0 && <span className={badge}>{disputed}</span>}
+                      {disputed > 0 && <span className="rounded-full bg-lose px-1.5 text-xs font-bold text-white">{disputed}</span>}
                     </Link>
                   )}
-                </nav>
-                <form action={logout} className="ml-auto">
-                  <button className="btn">ログアウト</button>
-                </form>
+                  <Link href="/rules" className="btn min-h-9 px-2.5">ルール</Link>
+                  <form action={logout}>
+                    <SubmitButton className="btn min-h-9 px-2.5">ログアウト</SubmitButton>
+                  </form>
+                </div>
               </>
             )}
           </div>
         </header>
-        <main className="mx-auto max-w-4xl px-4 py-6">{children}</main>
+        <main className="mx-auto max-w-4xl px-4 py-6 pb-28 sm:pb-10">{children}</main>
+        {me && <NavLinks items={items} variant="bottom" />}
       </body>
     </html>
   );

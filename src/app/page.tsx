@@ -2,6 +2,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TOURNAMENT_STATUS, fmtDateTime, type Tournament } from "@/lib/types";
 
+const MEDAL: Record<number, string> = {
+  1: "bg-amber-300 text-amber-950",
+  2: "bg-slate-300 text-slate-900",
+  3: "bg-orange-300 text-orange-950",
+};
+
 export default async function RankingPage() {
   const supabase = await createClient();
   const {
@@ -71,38 +77,46 @@ export default async function RankingPage() {
         </section>
       )}
 
-      <div className="space-y-4">
-        <h1 className="text-xl font-bold">ランキング</h1>
-        <div className="panel overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead className="border-b border-line text-left text-mute">
-              <tr>
-                <th className="px-3 py-2 font-normal">順位</th>
-                <th className="px-3 py-2 font-normal">プレイヤー</th>
-                <th className="px-3 py-2 text-right font-normal">レート</th>
-                <th className="hidden px-3 py-2 text-right font-normal sm:table-cell">最高</th>
-                <th className="px-3 py-2 text-right font-normal">勝-敗</th>
-                <th className="hidden px-3 py-2 font-normal md:table-cell">1戦目キャラ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {players.map((p) => (
-                <tr key={p.id} className={`border-b border-line last:border-0 ${p.id === user?.id ? "bg-accent/5" : ""}`}>
-                  <td className="num px-3 py-2.5 text-lg font-bold">{p.rank}</td>
-                  <td className="px-3 py-2.5">
-                    <Link href={`/users/${p.username}`} className="font-medium hover:underline">
-                      {p.display_name}
-                    </Link>
-                  </td>
-                  <td className="num px-3 py-2.5 text-right text-lg font-bold">{p.rating}</td>
-                  <td className="num hidden px-3 py-2.5 text-right text-mute sm:table-cell">{p.max_rating}</td>
-                  <td className="num px-3 py-2.5 text-right">{p.wins}-{p.losses}</td>
-                  <td className="hidden px-3 py-2.5 text-mute md:table-cell">{p.first_character ?? "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="space-y-3">
+        <div className="flex items-end justify-between">
+          <h1 className="text-xl font-bold">ランキング</h1>
+          <p className="text-xs text-mute">{players.length}人が参加中</p>
         </div>
+        {players.length === 0 && <p className="panel text-sm text-mute">まだプレイヤーがいません。</p>}
+        <ol className="space-y-2">
+          {players.map((p) => {
+            const total = p.wins + p.losses;
+            const rate = total ? Math.round((p.wins / total) * 100) : null;
+            const isMe = p.id === user?.id;
+            return (
+              <li key={p.id}>
+                <Link
+                  href={`/users/${p.username}`}
+                  className={`flex items-center gap-3 rounded-xl border bg-panel p-3 shadow-card transition hover:-translate-y-px ${
+                    isMe ? "border-accent ring-1 ring-accent/40" : "border-line"
+                  }`}
+                >
+                  <span className={`num grid size-10 shrink-0 place-items-center rounded-full text-base font-bold ${MEDAL[p.rank] ?? "bg-paper text-mute"}`}>
+                    {p.rank}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate font-bold">{p.display_name}</span>
+                      {isMe && <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent">あなた</span>}
+                    </span>
+                    <span className="block truncate text-xs text-mute">
+                      {p.first_character ?? "キャラ未設定"} ・ {p.wins}勝{p.losses}敗{rate != null && ` ・ 勝率${rate}%`}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="num block text-xl font-bold leading-none">{p.rating}</span>
+                    <span className="num text-[11px] text-mute">最高 {p.max_rating}</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
         <p className="text-sm text-mute">初期レートは1500。双方が結果を入力して一致した対戦のみ、レートに反映されます。</p>
       </div>
     </div>

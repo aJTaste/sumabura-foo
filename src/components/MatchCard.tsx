@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import type { MatchRow } from "@/lib/types";
 import { reportText } from "@/lib/types";
@@ -15,7 +16,7 @@ function ResolveButton({ id, action, label, className }: { id: string; action: s
     <form action={resolveMatch}>
       <input type="hidden" name="matchId" value={id} />
       <input type="hidden" name="action" value={action} />
-      <button className={`btn ${className ?? ""}`}>{label}</button>
+      <SubmitButton className={`btn ${className ?? ""}`}>{label}</SubmitButton>
     </form>
   );
 }

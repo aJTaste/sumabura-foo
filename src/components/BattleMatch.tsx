@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import type { MatchRow, Setup } from "@/lib/types";
 import { reportText } from "@/lib/types";
@@ -49,15 +50,19 @@ export default function BattleMatch({ m, meId }: { m: MatchRow; meId: string }) 
 
   return (
     <div className="space-y-4">
-      <section className="panel">
-        <h1 className="text-xl font-bold">
-          {me.display_name}
-          <span className="num mx-2 font-normal text-mute">{me.rating}</span>
-          vs
-          <Link href={`/users/${opp.username}`} className="ml-2 hover:underline">{opp.display_name}</Link>
-          <span className="num ml-2 font-normal text-mute">{opp.rating}</span>
-        </h1>
-        <p role="status" className={`mt-2 text-sm ${disputed ? "text-lose" : "text-mute"}`}>{status}</p>
+      <section className="overflow-hidden rounded-2xl border border-line bg-panel shadow-card">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-gradient-to-r from-accent/10 via-transparent to-lose/10 px-4 py-5 text-center">
+          <div className="min-w-0">
+            <p className="truncate text-lg font-bold">{me.display_name}</p>
+            <p className="num text-sm text-mute">{me.rating}</p>
+          </div>
+          <span className="text-2xl font-black italic tracking-tight text-accent">VS</span>
+          <div className="min-w-0">
+            <Link href={`/users/${opp.username}`} className="block truncate text-lg font-bold hover:underline">{opp.display_name}</Link>
+            <p className="num text-sm text-mute">{opp.rating}</p>
+          </div>
+        </div>
+        <p role="status" className={`border-t border-line px-4 py-3 text-sm ${disputed ? "bg-lose/10 text-lose" : "text-mute"}`}>{status}</p>
       </section>
 
       <StageList
@@ -96,9 +101,9 @@ export default function BattleMatch({ m, meId }: { m: MatchRow; meId: string }) 
         <form action={setCancel}>
           <input type="hidden" name="matchId" value={m.id} />
           <input type="hidden" name="on" value={myCancel ? "0" : "1"} />
-          <button className="btn btn-danger">
+          <SubmitButton className="btn btn-danger">
             {myCancel ? "中止の申請を取り下げる" : oppCancel ? "中止に同意する" : "対戦を中止する"}
-          </button>
+          </SubmitButton>
         </form>
       </section>
     </div>

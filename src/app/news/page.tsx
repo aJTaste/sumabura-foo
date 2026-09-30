@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import ErrorNote from "@/components/ErrorNote";
 import { fmtDateTime } from "@/lib/types";
@@ -34,7 +35,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
             <label className="label" htmlFor="body">本文（2000文字まで）</label>
             <textarea id="body" name="body" className="input" rows={5} maxLength={2000} />
           </div>
-          <button className="btn btn-primary">投稿する</button>
+          <SubmitButton className="btn btn-primary">投稿する</SubmitButton>
         </form>
       )}
 
@@ -49,7 +50,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
           {isAdmin && (
             <form action={deleteAnnouncement} className="mt-3">
               <input type="hidden" name="id" value={a.id} />
-              <button className="btn btn-danger">削除する</button>
+              <SubmitButton className="btn btn-danger">削除する</SubmitButton>
             </form>
           )}
         </article>

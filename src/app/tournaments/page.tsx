@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ErrorNote from "@/components/ErrorNote";
@@ -49,7 +50,7 @@ export default async function TournamentsPage({ searchParams }: { searchParams: 
             <label className="label" htmlFor="description">説明・ルール（任意）</label>
             <textarea id="description" name="description" className="input" rows={3} maxLength={1000} />
           </div>
-          <button className="btn btn-primary">大会を作る</button>
+          <SubmitButton className="btn btn-primary">大会を作る</SubmitButton>
         </form>
       )}
 

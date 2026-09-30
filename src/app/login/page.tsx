@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import ErrorNote from "@/components/ErrorNote";
 import { login, register } from "./actions";
 
@@ -18,7 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <label className="label" htmlFor="l-password">パスワード</label>
             <input id="l-password" name="password" type="password" className="input" autoComplete="current-password" required />
           </div>
-          <button className="btn btn-primary w-full">ログイン</button>
+          <SubmitButton className="btn btn-primary w-full">ログイン</SubmitButton>
         </form>
       </section>
 
@@ -41,7 +42,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <label className="label" htmlFor="r-invite">合言葉（友達から教えてもらってください）</label>
             <input id="r-invite" name="invite" className="input" required />
           </div>
-          <button className="btn btn-primary w-full">登録する</button>
+          <SubmitButton className="btn btn-primary w-full">登録する</SubmitButton>
         </form>
       </section>
     </div>

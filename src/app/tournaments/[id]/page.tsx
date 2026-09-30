@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -173,9 +174,9 @@ export default async function TournamentPage({
           {tournament.status === "open" && (
             <form action={entered ? leaveTournament : enterTournament} className="ml-auto">
               <input type="hidden" name="tid" value={id} />
-              <button className={`btn ${entered ? "" : "btn-primary"}`}>
+              <SubmitButton className={`btn ${entered ? "" : "btn-primary"}`}>
                 {entered ? "エントリーを取り消す" : "エントリーする"}
-              </button>
+              </SubmitButton>
             </form>
           )}
         </div>
@@ -191,7 +192,7 @@ export default async function TournamentPage({
                   <form action={removeEntry} className="ml-auto">
                     <input type="hidden" name="tid" value={id} />
                     <input type="hidden" name="userId" value={e.user_id} />
-                    <button className="btn btn-danger px-2 py-0.5 text-xs">削除</button>
+                    <SubmitButton className="btn btn-danger px-2 py-0.5 text-xs">削除</SubmitButton>
                   </form>
                 )}
               </li>
@@ -214,12 +215,12 @@ export default async function TournamentPage({
               <p className="text-sm text-mute">
                 エントリーを締め切って、トーナメント表を作成します。作成後はエントリーの変更ができません。人数が2のべき乗でないときは、上位シードから順に不戦勝になります。
               </p>
-              <button className="btn btn-primary">エントリーを締め切ってトーナメント表を作る</button>
+              <SubmitButton className="btn btn-primary">エントリーを締め切ってトーナメント表を作る</SubmitButton>
             </form>
           )}
           <form action={cancelTournament}>
             <input type="hidden" name="tid" value={id} />
-            <button className="btn btn-danger">この大会を中止する</button>
+            <SubmitButton className="btn btn-danger">この大会を中止する</SubmitButton>
           </form>
         </section>
       )}

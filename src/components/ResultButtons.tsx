@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 // 「勝った / 負けた」ボタン。2本先取のマッチ全体の結果だけを入力する（各ゲームの結果は不要）。
 export default function ResultButtons({
   action,
@@ -24,12 +25,12 @@ export default function ResultButtons({
           {Object.entries(extra ?? {}).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
-          <button
+          <SubmitButton
             className={`btn w-full py-3 text-base ${myReport === value ? "btn-primary" : ""}`}
             aria-current={myReport === value}
           >
             {label}
-          </button>
+          </SubmitButton>
         </form>
       ))}
     </div>

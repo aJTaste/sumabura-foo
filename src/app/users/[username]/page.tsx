@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -78,7 +79,7 @@ export default async function UserPage({
           ) : (
             <form action={chooseFromProfile}>
               <input type="hidden" name="target" value={p.id} />
-              <button className="btn btn-primary">この人と対戦する</button>
+              <SubmitButton className="btn btn-primary">この人と対戦する</SubmitButton>
             </form>
           )}
         </div>
@@ -124,7 +125,7 @@ export default async function UserPage({
           </fieldset>
 
           <div className="flex items-center gap-3">
-            <button className="btn btn-primary">保存する</button>
+            <SubmitButton className="btn btn-primary">保存する</SubmitButton>
             <span className="text-sm text-mute">変更は次の対戦から反映されます。</span>
           </div>
         </form>

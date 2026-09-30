@@ -1,3 +1,4 @@
+import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AutoRefresh from "@/components/AutoRefresh";
@@ -70,7 +71,7 @@ export default async function BattlePage({ searchParams }: { searchParams: Promi
             <strong>{myChoiceName}</strong> さんの選択を待っています（30分で自動的に解除されます）
           </p>
           <form action={clearOpponent} className="ml-auto">
-            <button className="btn">選択を取り消す</button>
+            <SubmitButton className="btn">選択を取り消す</SubmitButton>
           </form>
         </section>
       )}
@@ -92,9 +93,9 @@ export default async function BattlePage({ searchParams }: { searchParams: Promi
               ) : (
                 <form action={selectOpponent}>
                   <input type="hidden" name="target" value={p.id} />
-                  <button className={`btn ${chosenBy.has(p.id) ? "btn-primary" : ""}`}>
+                  <SubmitButton className={`btn ${chosenBy.has(p.id) ? "btn-primary" : ""}`}>
                     {chosenBy.has(p.id) ? "対戦する" : "この人を選ぶ"}
-                  </button>
+                  </SubmitButton>
                 </form>
               )}
             </span>

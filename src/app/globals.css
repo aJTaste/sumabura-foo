@@ -1,22 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #eef1f6;
+  --color-paper: #f1f4fb;
   --color-panel: #ffffff;
-  --color-ink: #141b2d;
+  --color-ink: #121a2e;
   --color-mute: #5b657a;
-  --color-line: #d7dce6;
-  --color-accent: #2f5bff;
-  --color-accent-dark: #2247d6;
-  --color-win: #178a4f;
-  --color-lose: #c93a52;
+  --color-line: #dde2ee;
+  --color-accent: #3b5bff;
+  --color-accent-dark: #2a44d4;
+  --color-win: #12905a;
+  --color-lose: #d23a55;
   --color-hold: #b7791f;
   --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  --shadow-card: 0 1px 2px rgb(20 27 45 / 0.05), 0 6px 20px rgb(20 27 45 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-paper: #0d1220;
+    --color-panel: #161d30;
+    --color-ink: #e8ecf7;
+    --color-mute: #93a0ba;
+    --color-line: #27314a;
+    --color-accent: #5570ff;
+    --color-accent-dark: #6d86ff;
+    --color-win: #34c98b;
+    --color-lose: #ff6b85;
+    --color-hold: #e5b04d;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
+  }
 }
 
 @layer base {
   body {
     @apply bg-paper text-ink antialiased;
+  }
+  input[type="checkbox"] {
+    accent-color: var(--color-accent);
   }
   a:focus-visible,
   button:focus-visible,
@@ -26,14 +47,20 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @layer components {
   .panel {
-    @apply rounded-lg border border-line bg-panel p-4;
+    @apply rounded-xl border border-line bg-panel p-4 shadow-card;
   }
   .btn {
-    @apply inline-flex items-center justify-center rounded-md border border-line bg-panel px-3 py-1.5 text-sm font-medium text-ink hover:bg-paper disabled:opacity-50;
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-panel px-3.5 py-1.5 text-sm font-medium text-ink transition hover:bg-paper active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
     @apply border-accent bg-accent text-white hover:bg-accent-dark;
@@ -42,12 +69,15 @@
     @apply text-lose;
   }
   .input {
-    @apply w-full rounded-md border border-line bg-white px-3 py-2 text-sm;
+    @apply min-h-10 w-full rounded-lg border border-line bg-panel px-3 py-2 text-base text-ink placeholder:text-mute focus:border-accent sm:text-sm;
   }
   .label {
-    @apply mb-1 block text-sm text-mute;
+    @apply mb-1 block text-sm font-medium text-mute;
   }
   .num {
     font-variant-numeric: tabular-nums;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-xl bg-line/70;
   }
 }
