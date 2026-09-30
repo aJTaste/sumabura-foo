@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ErrorNote from "@/components/ErrorNote";
+import Markdown from "@/components/Markdown";
 import Bracket from "@/components/Bracket";
 import ResultButtons from "@/components/ResultButtons";
 import StageList from "@/components/StageList";
@@ -148,7 +149,7 @@ export default async function TournamentPage({
         <p className="mt-1 text-sm text-mute">
           {tournament.starts_at ? `開催: ${fmtDateTime(tournament.starts_at)}` : "開催日時: 未定"}
         </p>
-        {tournament.description && <p className="mt-3 whitespace-pre-wrap leading-relaxed">{tournament.description}</p>}
+        {tournament.description && <Markdown className="mt-3">{tournament.description}</Markdown>}
         <p className="mt-3 text-xs text-mute">大会の試合はレートには反映されません。</p>
       </section>
 

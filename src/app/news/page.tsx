@@ -1,6 +1,7 @@
 import SubmitButton from "@/components/SubmitButton";
 import { createClient } from "@/lib/supabase/server";
 import ErrorNote from "@/components/ErrorNote";
+import Markdown from "@/components/Markdown";
 import { fmtDateTime } from "@/lib/types";
 import { postAnnouncement, deleteAnnouncement } from "./actions";
 
@@ -32,8 +33,9 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
             <input id="title" name="title" className="input" maxLength={100} required />
           </div>
           <div>
-            <label className="label" htmlFor="body">本文（2000文字まで）</label>
+            <label className="label" htmlFor="body">本文（2000文字まで・Markdown記法が使えます）</label>
             <textarea id="body" name="body" className="input" rows={5} maxLength={2000} />
+            <p className="mt-1 text-xs text-mute">例: **太字** / - 箇条書き / [表示名](https://…) / ## 見出し（見出しは大きくなりすぎないよう自動で調整されます）</p>
           </div>
           <SubmitButton className="btn btn-primary">投稿する</SubmitButton>
         </form>
@@ -46,7 +48,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
             <h2 className="font-bold">{a.title}</h2>
             <time className="text-xs text-mute" dateTime={a.created_at}>{fmtDateTime(a.created_at)}</time>
           </div>
-          {a.body && <p className="mt-2 whitespace-pre-wrap leading-relaxed">{a.body}</p>}
+          {a.body && <Markdown className="mt-2">{a.body}</Markdown>}
           {isAdmin && (
             <form action={deleteAnnouncement} className="mt-3">
               <input type="hidden" name="id" value={a.id} />

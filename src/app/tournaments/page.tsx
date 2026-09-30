@@ -47,7 +47,7 @@ export default async function TournamentsPage({ searchParams }: { searchParams: 
             <input id="startsAt" name="startsAt" type="datetime-local" className="input" />
           </div>
           <div>
-            <label className="label" htmlFor="description">説明・ルール（任意）</label>
+            <label className="label" htmlFor="description">説明・ルール（任意・Markdown記法が使えます）</label>
             <textarea id="description" name="description" className="input" rows={3} maxLength={1000} />
           </div>
           <SubmitButton className="btn btn-primary">大会を作る</SubmitButton>
