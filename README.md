@@ -54,6 +54,12 @@ Vercel にデプロイするときは、`.env.local` と同じ4つの環境変�
 - ヘッダーとナビは `src/components/Header.tsx`、数字バッジは `src/components/Badges.tsx`。どちらも先に画面を出して、あとから埋まる作りです
 - 対戦画面の自動更新は `GET /api/battle-signal`（`src/app/api/battle-signal/route.ts`）で状態を確認します
 
+## バージョン表記の更新
+
+- ヘッダーのサイト名の下に現在のバージョンが出ます。タップ（クリック）すると、最新バージョンのアップデート内容が開きます
+- 更新するときは `src/lib/version.ts` の `RELEASES` の**先頭**に、新しい版（`version` / `date` / `items`）を追加するだけです。先頭が現在のバージョンになります（古い版は履歴として残ります）
+- 表示にはこのファイルだけを使います（`package.json` の `version` は表示に使いません）
+
 ## 仕組み
 
 - ログイン: ユーザー名 + パスワード（内部で `ユーザー名@smash.example.com` のメールに変換）。ログインのたびにルール画面を表示

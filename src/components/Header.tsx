@@ -1,6 +1,7 @@
 import Link from "next/link";
 import NavLinks, { type NavItem } from "@/components/NavLinks";
 import SubmitButton from "@/components/SubmitButton";
+import VersionBadge from "@/components/VersionBadge";
 import { WaitingBadge, DisputedBadge, prefetchWaiting } from "@/components/Badges";
 import { getMe, getUserId, type Me } from "@/lib/auth";
 import { logout } from "@/app/actions";
@@ -8,11 +9,25 @@ import { logout } from "@/app/actions";
 // ヘッダーとナビは、レイアウトの外に切り出して Suspense で包んでいる。
 // レイアウトが自分のプロフィールを待つ間に、ページ本体の取得を止めないため（両方が同時に走る）。
 
+// ボタン（バージョン表示）はリンクの中に入れられないので、ロゴ・サイト名・バージョンを別々に並べている。
+// 横幅はこれまでと同じなので、スマホでも右側のボタンを押し出さない。
 const BRAND = (
-  <Link href="/" className="flex items-center gap-2 font-bold">
-    <span className="grid size-8 place-items-center rounded-lg bg-accent text-sm font-black text-white">S</span>
-    <span className="text-base">スマブラ レート</span>
-  </Link>
+  <div className="flex items-center gap-2">
+    <Link
+      href="/"
+      aria-hidden
+      tabIndex={-1}
+      className="grid size-8 place-items-center rounded-lg bg-accent text-sm font-black text-white"
+    >
+      S
+    </Link>
+    <div className="flex flex-col items-start">
+      <Link href="/" className="text-base font-bold leading-none">
+        スマブラ レート
+      </Link>
+      <VersionBadge />
+    </div>
+  </div>
 );
 
 const SHELL = "sticky top-0 z-20 border-b border-line bg-panel/85 backdrop-blur";
