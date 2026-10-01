@@ -1,6 +1,7 @@
 import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getMe, getSupabase, getUserId } from "@/lib/auth";
 import AutoRefresh from "@/components/AutoRefresh";
 import BattleMatch from "@/components/BattleMatch";
 import ErrorNote from "@/components/ErrorNote";
@@ -9,19 +10,29 @@ import { selectOpponent, clearOpponent } from "./actions";
 
 export default async function BattlePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const meId = session!.user.id;
+  const meId = await getUserId();
+  if (!meId) redirect("/login");
+  const supabase = await getSupabase();
+
+  // 必要になりそうな問い合わせを最初にまとめて投げる（順番に待つと、往復の回数ぶん遅くなる）
+  const [me, { data: active }, { data: players }, { data: challenges }, { data: busyRows }] = await Promise.all([
+    getMe(),
+    supabase
+      .from("matches")
+      .select(MATCH_SELECT)
+      .in("status", ["pending", "disputed"])
+      .or(`player_a.eq.${meId},player_b.eq.${meId}`)
+      .limit(1),
+    supabase
+      .from("profiles")
+      .select("id, username, display_name, rating")
+      .neq("id", meId)
+      .order("rating", { ascending: false }),
+    supabase.from("challenges").select("from_user, to_user").gt("created_at", challengeCutoff()),
+    supabase.from("matches").select("player_a, player_b").in("status", ["pending", "disputed"]),
+  ]);
 
   // 進行中の対戦があれば、その画面を出す
-  const { data: active } = await supabase
-    .from("matches")
-    .select(MATCH_SELECT)
-    .in("status", ["pending", "disputed"])
-    .or(`player_a.eq.${meId},player_b.eq.${meId}`)
-    .limit(1);
   const match = ((active ?? []) as unknown as MatchRow[])[0];
 
   if (match) {
@@ -33,17 +44,6 @@ export default async function BattlePage({ searchParams }: { searchParams: Promi
       </div>
     );
   }
-
-  const [{ data: me }, { data: players }, { data: challenges }, { data: busyRows }] = await Promise.all([
-    supabase.from("profiles").select("username, first_character").eq("id", meId).single(),
-    supabase
-      .from("profiles")
-      .select("id, username, display_name, rating")
-      .neq("id", meId)
-      .order("rating", { ascending: false }),
-    supabase.from("challenges").select("from_user, to_user").gt("created_at", challengeCutoff()),
-    supabase.from("matches").select("player_a, player_b").in("status", ["pending", "disputed"]),
-  ]);
 
   const myChoice = (challenges ?? []).find((c) => c.from_user === meId)?.to_user as string | undefined;
   const chosenBy = new Set((challenges ?? []).filter((c) => c.to_user === meId).map((c) => c.from_user as string));

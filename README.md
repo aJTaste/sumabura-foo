@@ -47,6 +47,13 @@ Vercel にデプロイするときは、`.env.local` と同じ4つの環境変�
    - 「Could not find the function」と出る場合は `notify pgrst, 'reload schema';` を実行
 3. 本番開始の直前に、`supabase/reset_test_data.sql` を1回だけ実行（テストのレート・履歴を初期化。アカウントとプロフィール設定は残る）
 
+## 表示速度について
+
+- ログインの確認は `getClaims()`（`src/lib/auth.ts`・`src/middleware.ts`）。Supabase の JWT 署名キーが「非対称キー」なら通信なしで確認できます。**Supabase の Project Settings > JWT Keys が従来の共有シークレットのままだと、この高速化は効きません**（動作は今まで通りで、遅くもなりません）。新しい署名キーへの移行をおすすめします
+- Vercel の Functions Region は、Supabase のリージョンと同じ地域にしてください（例: Supabase が Tokyo なら Vercel は hnd1）。離れていると、1回の問い合わせごとに待ちが増えます
+- ヘッダーとナビは `src/components/Header.tsx`、数字バッジは `src/components/Badges.tsx`。どちらも先に画面を出して、あとから埋まる作りです
+- 対戦画面の自動更新は `GET /api/battle-signal`（`src/app/api/battle-signal/route.ts`）で状態を確認します
+
 ## 仕組み
 
 - ログイン: ユーザー名 + パスワード（内部で `ユーザー名@smash.example.com` のメールに変換）。ログインのたびにルール画面を表示

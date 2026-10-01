@@ -1,5 +1,5 @@
 import SubmitButton from "@/components/SubmitButton";
-import { createClient } from "@/lib/supabase/server";
+import { getMe, getSupabase } from "@/lib/auth";
 import ErrorNote from "@/components/ErrorNote";
 import Markdown from "@/components/Markdown";
 import { fmtDateTime } from "@/lib/types";
@@ -7,14 +7,10 @@ import { postAnnouncement, deleteAnnouncement } from "./actions";
 
 export default async function NewsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session!.user;
+  const supabase = await getSupabase();
 
-  const [{ data: me }, { data }] = await Promise.all([
-    supabase.from("profiles").select("is_admin").eq("id", user.id).single(),
+  const [me, { data }] = await Promise.all([
+    getMe(),
     supabase.from("announcements").select("id, title, body, created_at").order("created_at", { ascending: false }).limit(50),
   ]);
   const isAdmin = !!me?.is_admin;

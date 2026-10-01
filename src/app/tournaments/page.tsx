@@ -1,20 +1,16 @@
 import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getMe, getSupabase } from "@/lib/auth";
 import ErrorNote from "@/components/ErrorNote";
 import { TOURNAMENT_STATUS, fmtDateTime, type Tournament } from "@/lib/types";
 import { createTournament } from "./actions";
 
 export default async function TournamentsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session!.user;
+  const supabase = await getSupabase();
 
-  const [{ data: me }, { data }, { data: entryRows }] = await Promise.all([
-    supabase.from("profiles").select("is_admin").eq("id", user.id).single(),
+  const [me, { data }, { data: entryRows }] = await Promise.all([
+    getMe(),
     supabase.from("tournaments").select("*").order("created_at", { ascending: false }).limit(50),
     supabase.from("tournament_entries").select("tournament_id, user_id"),
   ]);
@@ -24,7 +20,7 @@ export default async function TournamentsPage({ searchParams }: { searchParams: 
   const mine = new Set<string>();
   for (const e of entryRows ?? []) {
     counts.set(e.tournament_id, (counts.get(e.tournament_id) ?? 0) + 1);
-    if (e.user_id === user.id) mine.add(e.tournament_id);
+    if (e.user_id === me?.id) mine.add(e.tournament_id);
   }
 
   return (

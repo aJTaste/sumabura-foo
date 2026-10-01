@@ -1,11 +1,18 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
-export type NavItem = { href: string; label: string; icon: string; badge?: number };
+// badge は、数字バッジ（サーバー側で後から出てくる部品）をそのまま受け取る
+export type NavItem = { href: string; label: string; icon: string; badge?: ReactNode };
 
-const badgeCls = "ml-1 rounded-full bg-lose px-1.5 text-xs font-bold text-white";
+// タップしてから画面が切り替わるまでの間、ラベルを脈打たせて「反応している」ことを伝える
+// （Link の中に置いたときだけ、そのリンクの読み込み状態が分かる）
+function Pending({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const { pending } = useLinkStatus();
+  return <span className={`${className} ${pending ? "animate-pulse" : ""}`}>{children}</span>;
+}
 
 export default function NavLinks({ items, variant }: { items: NavItem[]; variant: "top" | "bottom" }) {
   const path = usePathname();
@@ -23,8 +30,8 @@ export default function NavLinks({ items, variant }: { items: NavItem[]; variant
               isActive(i.href) ? "bg-accent/10 text-accent" : "text-mute hover:bg-paper hover:text-ink"
             }`}
           >
-            {i.label}
-            {!!i.badge && <span className={badgeCls}>{i.badge}</span>}
+            <Pending>{i.label}</Pending>
+            {i.badge}
           </Link>
         ))}
       </nav>
@@ -41,15 +48,15 @@ export default function NavLinks({ items, variant }: { items: NavItem[]; variant
           key={i.href}
           href={i.href}
           aria-current={isActive(i.href) ? "page" : undefined}
-          className={`relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition ${
+          className={`relative flex flex-col items-center py-2 text-[11px] font-medium transition ${
             isActive(i.href) ? "text-accent" : "text-mute"
           }`}
         >
-          <span className="text-xl leading-none" aria-hidden>{i.icon}</span>
-          {i.label}
-          {!!i.badge && (
-            <span className="absolute right-[22%] top-1 rounded-full bg-lose px-1.5 text-[10px] font-bold text-white">{i.badge}</span>
-          )}
+          <Pending className="flex flex-col items-center gap-0.5">
+            <span className="text-xl leading-none" aria-hidden>{i.icon}</span>
+            {i.label}
+          </Pending>
+          {i.badge}
         </Link>
       ))}
     </nav>

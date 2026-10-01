@@ -1,22 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getMe, getSupabase } from "@/lib/auth";
 import MatchCard from "@/components/MatchCard";
 import ErrorNote from "@/components/ErrorNote";
 import { MATCH_SELECT, reportText, type MatchRow } from "@/lib/types";
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session!.user;
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
-  if (!me?.is_admin) redirect("/");
+  const supabase = await getSupabase();
 
+  // 管理者かどうかの確認と同時に、表示する内容も取りに行く（管理者でなければ、表示せずに戻す）
   // 大会の保留（勝者の指定は各大会のページで行う）
-  const [{ data }, { data: tRows }] = await Promise.all([
+  const [me, { data }, { data: tRows }] = await Promise.all([
+    getMe(),
     supabase
       .from("matches")
       .select(MATCH_SELECT)
@@ -29,6 +25,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       )
       .eq("status", "disputed"),
   ]);
+  if (!me?.is_admin) redirect("/");
   const matches = (data ?? []) as unknown as MatchRow[];
   const disputed = matches.filter((m) => m.status === "disputed");
   const tDisputed = (tRows ?? []) as unknown as {

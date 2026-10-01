@@ -1,7 +1,8 @@
 import SubmitButton from "@/components/SubmitButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getMe, getSupabase } from "@/lib/auth";
 import ErrorNote from "@/components/ErrorNote";
 import Markdown from "@/components/Markdown";
 import Bracket from "@/components/Bracket";
@@ -38,15 +39,11 @@ export default async function TournamentPage({
 }) {
   const { id } = await params;
   const { error } = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const meId = session!.user.id;
+  const supabase = await getSupabase();
 
-  const [{ data: t }, { data: me }, { data: entryRows }, { data: matchRows }] = await Promise.all([
+  const [{ data: t }, me, { data: entryRows }, { data: matchRows }] = await Promise.all([
     supabase.from("tournaments").select("*").eq("id", id).maybeSingle(),
-    supabase.from("profiles").select("is_admin").eq("id", meId).single(),
+    getMe(),
     supabase
       .from("tournament_entries")
       .select("user_id, p:profiles!tournament_entries_user_id_fkey(username, display_name, rating)")
@@ -55,8 +52,10 @@ export default async function TournamentPage({
     supabase.from("tournament_matches").select(TMATCH_SELECT).eq("tournament_id", id).order("round").order("slot"),
   ]);
   if (!t) notFound();
+  if (!me) redirect("/login");
+  const meId = me.id;
   const tournament = t as Tournament;
-  const isAdmin = !!me?.is_admin;
+  const isAdmin = me.is_admin;
   const entries = (entryRows ?? []) as unknown as EntryRow[];
   const matches = (matchRows ?? []) as unknown as TMatch[];
   const totalRounds = matches.reduce((max, m) => Math.max(max, m.round), 0);

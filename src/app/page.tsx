@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getSupabase, getUserId } from "@/lib/auth";
 import { TOURNAMENT_STATUS, fmtDateTime, type Tournament } from "@/lib/types";
 
 const MEDAL: Record<number, string> = {
@@ -9,13 +9,10 @@ const MEDAL: Record<number, string> = {
 };
 
 export default async function RankingPage() {
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const supabase = await getSupabase();
 
-  const [{ data }, { data: news }, { data: cups }] = await Promise.all([
+  const [userId, { data }, { data: news }, { data: cups }] = await Promise.all([
+    getUserId(),
     supabase
       .from("profiles")
       .select("id, username, display_name, rating, max_rating, wins, losses, first_character")
@@ -87,7 +84,7 @@ export default async function RankingPage() {
           {players.map((p) => {
             const total = p.wins + p.losses;
             const rate = total ? Math.round((p.wins / total) * 100) : null;
-            const isMe = p.id === user?.id;
+            const isMe = p.id === userId;
             return (
               <li key={p.id}>
                 <Link
