@@ -3,17 +3,19 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getSupabase, getUserId } from "@/lib/auth";
 import { redirectWithError } from "@/lib/redirect";
 import { STAGES, MAX_BANNED_STAGES, MAX_ALT_CHARACTERS } from "@/lib/data/stages";
 import { CHARACTERS } from "@/lib/data/characters";
 
 export async function saveProfile(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: me } = await supabase.from("profiles").select("username").eq("id", user!.id).single();
-  const back = `/users/${me!.username}`;
+  // ログイン切れのときは、エラーで落とさずログイン画面へ戻す
+  const userId = await getUserId();
+  if (!userId) redirect("/login");
+  const supabase = await getSupabase();
+  const { data: me } = await supabase.from("profiles").select("username").eq("id", userId).maybeSingle();
+  if (!me) redirect("/login");
+  const back = `/users/${me.username}`;
 
   const displayName = String(formData.get("displayName") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
@@ -42,7 +44,7 @@ export async function saveProfile(formData: FormData) {
       alt_characters: alt,
       banned_stages: banned,
     })
-    .eq("id", user!.id);
+    .eq("id", userId);
   if (error) redirectWithError(back, "保存に失敗しました");
 
   revalidatePath("/", "layout");

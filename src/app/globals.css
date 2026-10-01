@@ -32,7 +32,21 @@
   }
 }
 
+/* 左右の余白。最低1rem で、ノッチのある端末を横向きにしたときはその分だけ広げる */
+@utility safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
 @layer base {
+  /* ダブルタップで拡大されたり、タップの反応が遅れたりしないようにする（ピンチ操作はそのまま使える） */
+  a,
+  button,
+  summary,
+  label,
+  select {
+    touch-action: manipulation;
+  }
   body {
     @apply bg-paper text-ink antialiased;
   }

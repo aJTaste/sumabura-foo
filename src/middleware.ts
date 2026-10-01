@@ -58,6 +58,11 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// ログインの有無にかかわらず、そのまま返すファイル（アイコンなど）は middleware を通さない。
+// 通すと、ログイン前・ルール確認前はログイン画面やルール画面へ飛ばされ、アイコンが表示されない。
+// PWA 化で増える manifest・Service Worker・アイコン類も、ここに含めてある。
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|icon\\.png|apple-icon\\.png|manifest\\.webmanifest|sw\\.js|offline\\.html|icons/).*)",
+  ],
 };

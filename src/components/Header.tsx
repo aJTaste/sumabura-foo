@@ -30,8 +30,9 @@ const BRAND = (
   </div>
 );
 
-const SHELL = "sticky top-0 z-20 border-b border-line bg-panel/85 backdrop-blur";
-const ROW = "mx-auto flex max-w-4xl items-center gap-3 px-4 py-2.5";
+// pt-[env(safe-area-inset-top)] と safe-x は、ノッチやステータスバーに隠れないための余白（ふつうの画面では 0）
+const SHELL = "sticky top-0 z-20 border-b border-line bg-panel/85 pt-[env(safe-area-inset-top)] backdrop-blur";
+const ROW = "safe-x mx-auto flex max-w-4xl items-center gap-3 py-2.5";
 
 function navItems(me: Me, variant: "top" | "bottom"): NavItem[] {
   return [

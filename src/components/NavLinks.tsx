@@ -41,7 +41,7 @@ export default function NavLinks({ items, variant }: { items: NavItem[]; variant
   return (
     <nav
       aria-label="メイン"
-      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-panel/90 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-panel/90 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur sm:hidden"
     >
       {items.map((i) => (
         <Link
