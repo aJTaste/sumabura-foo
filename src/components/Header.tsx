@@ -1,10 +1,9 @@
 import Link from "next/link";
 import NavLinks, { type NavItem } from "@/components/NavLinks";
-import SubmitButton from "@/components/SubmitButton";
+import LogoutForm from "@/components/LogoutForm";
 import VersionBadge from "@/components/VersionBadge";
 import { WaitingBadge, DisputedBadge, prefetchWaiting } from "@/components/Badges";
 import { getMe, getUserId, type Me } from "@/lib/auth";
-import { logout } from "@/app/actions";
 
 // ヘッダーとナビは、レイアウトの外に切り出して Suspense で包んでいる。
 // レイアウトが自分のプロフィールを待つ間に、ページ本体の取得を止めないため（両方が同時に走る）。
@@ -77,9 +76,7 @@ export async function Header() {
                 </Link>
               )}
               <Link href="/rules" className="btn min-h-9 px-2.5">ルール</Link>
-              <form action={logout}>
-                <SubmitButton className="btn min-h-9 px-2.5">ログアウト</SubmitButton>
-              </form>
+              <LogoutForm />
             </div>
           </>
         )}

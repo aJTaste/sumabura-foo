@@ -3,7 +3,9 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/auth";
 import { redirectWithError } from "@/lib/redirect";
+import { queueOpponentSelected } from "@/lib/push-notify";
 
 const BACK = "/battle";
 
@@ -16,7 +18,11 @@ async function finish(error: { message: string } | null): Promise<never> {
 // 対戦相手を選ぶ（相手もこちらを選んでいれば対戦が始まる）
 export async function selectOpponent(formData: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("select_opponent", { p_target: String(formData.get("target")) });
+  const me = await getUserId();
+  const target = String(formData.get("target"));
+  const { data, error } = await supabase.rpc("select_opponent", { p_target: target });
+  // 成功したときだけ、指名された相手へ通知する（応答を返したあとに送る。失敗しても結果は変わらない）
+  if (!error) queueOpponentSelected(me, target, data);
   return finish(error);
 }
 

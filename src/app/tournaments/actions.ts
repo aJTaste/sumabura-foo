@@ -3,7 +3,9 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getUserId } from "@/lib/auth";
 import { redirectWithError } from "@/lib/redirect";
+import { queueBracketCreated, queueTournamentCreated } from "@/lib/push-notify";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -40,6 +42,7 @@ export async function createTournament(formData: FormData) {
   }
 
   const supabase = await createClient();
+  const me = await getUserId();
   const { data, error } = await supabase
     .from("tournaments")
     .insert({ title, description, starts_at: startsAt })
@@ -47,17 +50,24 @@ export async function createTournament(formData: FormData) {
     .single();
   if (error || !data) redirectWithError(back, friendly(error?.message ?? "作成できませんでした"));
 
+  // 作成できたので、作成者以外の全員へ通知する（応答を返したあとに送る）
+  queueTournamentCreated(me, data.id, title);
+
   revalidatePath("/", "layout");
   redirect(`/tournaments/${data.id}`);
 }
 
 export async function createBracket(formData: FormData) {
   const supabase = await createClient();
+  const me = await getUserId();
+  const tid = String(formData.get("tid"));
   const seeding = String(formData.get("seeding")) === "random" ? "random" : "rating";
   const { error } = await supabase.rpc("create_bracket", {
-    p_tournament: String(formData.get("tid")),
+    p_tournament: tid,
     p_seeding: seeding,
   });
+  // 作成できたので、その大会の参加者（自分以外）へ通知する（応答を返したあとに送る）
+  if (!error) queueBracketCreated(me, tid);
   return finish(backOf(formData), error);
 }
 

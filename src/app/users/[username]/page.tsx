@@ -5,6 +5,8 @@ import { getSupabase, getUserId } from "@/lib/auth";
 import MatchCard from "@/components/MatchCard";
 import ErrorNote from "@/components/ErrorNote";
 import CharacterPicker from "@/components/CharacterPicker";
+import PushSettings from "@/components/PushSettings";
+import { getVapidConfig, isPushConfigured } from "@/lib/push-config";
 import { MATCH_SELECT, type MatchRow } from "@/lib/types";
 import { CHARACTERS } from "@/lib/data/characters";
 import { STAGES, MAX_BANNED_STAGES, MAX_ALT_CHARACTERS } from "@/lib/data/stages";
@@ -84,6 +86,9 @@ export default async function UserPage({
           )}
         </div>
       </section>
+
+      {/* 通知のオン/オフ（自分のプロフィールだけ。鍵が未設定なら、ボタンの代わりに準備中と出す） */}
+      {isMe && <PushSettings publicKey={getVapidConfig()?.publicKey ?? ""} configured={isPushConfigured()} />}
 
       {isMe ? (
         <form action={saveProfile} className="panel space-y-5">

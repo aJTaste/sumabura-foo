@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import IosInstallSteps from "@/components/IosInstallSteps";
+import { isIos, isStandalone } from "@/lib/device";
 
 // ブラウザが「インストールできます」と知らせてくるイベント（Chrome / Edge / Android。iPhone のSafariには無い）
 type InstallEvent = Event & {
@@ -10,22 +12,6 @@ type InstallEvent = Event & {
 
 const DISMISS_KEY = "install-prompt-dismissed-at";
 const DISMISS_DAYS = 14;
-
-// すでにアプリとして起動しているか（ホーム画面から開いた状態）
-function isStandalone() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
-}
-
-// iPhone / iPad か（iPadOS は Mac と名乗るので、タッチ対応かどうかも見る）
-function isIos() {
-  return (
-    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
-  );
-}
 
 function recentlyDismissed() {
   try {
@@ -101,14 +87,7 @@ export default function InstallPrompt() {
         </div>
       </div>
 
-      {ios && !event && showSteps && (
-        <ol className="mt-3 list-decimal space-y-1 pl-9 text-sm leading-relaxed">
-          <li>Safari でこのページを開く</li>
-          <li>共有ボタン（四角から矢印が出ているマーク）をタップ</li>
-          <li>「ホーム画面に追加」を選ぶ</li>
-          <li>右上の「追加」をタップ</li>
-        </ol>
-      )}
+      {ios && !event && showSteps && <IosInstallSteps />}
 
       <div className="mt-3 flex justify-end gap-2">
         <button type="button" onClick={dismiss} className="btn">

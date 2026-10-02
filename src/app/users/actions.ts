@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabase, getUserId } from "@/lib/auth";
 import { redirectWithError } from "@/lib/redirect";
+import { queueOpponentSelected } from "@/lib/push-notify";
 import { STAGES, MAX_BANNED_STAGES, MAX_ALT_CHARACTERS } from "@/lib/data/stages";
 import { CHARACTERS } from "@/lib/data/characters";
 
@@ -54,8 +55,12 @@ export async function saveProfile(formData: FormData) {
 // プロフィールから、その人を対戦相手として選ぶ
 export async function chooseFromProfile(formData: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("select_opponent", { p_target: String(formData.get("target")) });
+  const me = await getUserId();
+  const target = String(formData.get("target"));
+  const { data, error } = await supabase.rpc("select_opponent", { p_target: target });
   if (error) redirectWithError("/battle", error.message);
+  // 成功したので、指名された相手へ通知する（応答を返したあとに送る）
+  queueOpponentSelected(me, target, data);
   revalidatePath("/", "layout");
   redirect("/battle");
 }
